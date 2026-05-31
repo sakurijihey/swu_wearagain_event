@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>입고 또 입기 — 패스트패션과 환경</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--gd:#2d5016;--gm:#4a7a28;--gl:#7ab648;--gp:#c8e09a;--cream:#f0ede0;--cdk:#ddd9c4;--white:#fff;--text:#1a1a0a;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans KR',sans-serif;background:#0a0a08;color:#fff;overflow-x:hidden;}
+
+/* ── 양방향 스크롤 애니메이션 ── */
+.sr{opacity:0;transform:translateY(50px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1);}
+.sr.in{opacity:1;transform:translateY(0);}
+.sr.out{opacity:0;transform:translateY(-30px);}
+.sl{opacity:0;transform:translateX(-60px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1);}
+.sl.in{opacity:1;transform:translateX(0);}
+.sl.out{opacity:0;transform:translateX(-40px);}
+.srr{opacity:0;transform:translateX(60px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1);}
+.srr.in{opacity:1;transform:translateX(0);}
+.srr.out{opacity:0;transform:translateX(40px);}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}
+.d4{transition-delay:.4s;}.d5{transition-delay:.5s;}.d6{transition-delay:.6s;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:4rem 2rem;}
+.hero-img{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1600&q=80') center/cover no-repeat;filter:brightness(.22) saturate(.5);transform:scale(1.06);transition:transform 7s ease;}
+.hero-img.loaded{transform:scale(1);}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,10,8,.3) 0%,rgba(10,10,8,.75) 70%,#0a0a08 100%);}
+.hero-content{position:relative;text-align:center;max-width:960px;}
+.hero-tag{display:inline-block;font-size:12px;font-weight:500;letter-spacing:.15em;color:var(--gp);border:1px solid rgba(200,224,154,.35);border-radius:30px;padding:6px 18px;margin-bottom:2rem;opacity:0;animation:fadeUp .8s .3s forwards;}
+.hero-title{font-size:clamp(46px,8vw,110px);font-weight:900;line-height:1.0;color:#fff;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .5s forwards;}
+.hero-title .accent{color:var(--gp);}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);color:rgba(255,255,255,.6);line-height:1.85;max-width:580px;margin:0 auto;opacity:0;animation:fadeUp .8s .7s forwards;}
+.scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;color:rgba(255,255,255,.32);opacity:0;animation:fadeUp 1s 1.3s forwards;}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,rgba(255,255,255,.4),transparent);animation:sline 2s ease-in-out infinite;}
+@keyframes sline{0%,100%{opacity:1;}50%{opacity:.25;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── IMAGE STRIP ── */
+.img-strip{height:52vh;position:relative;overflow:hidden;}
+.img-strip img{width:100%;height:115%;object-fit:cover;filter:brightness(.5) saturate(.65);position:absolute;top:-7%;}
+.img-strip-overlay{position:absolute;inset:0;display:flex;align-items:center;}
+.img-strip-text{color:#fff;font-size:clamp(20px,3.2vw,40px);font-weight:900;line-height:1.3;padding:0 4rem;max-width:750px;}
+.img-strip-text.right{margin-left:auto;text-align:right;}
+.img-strip-text .accent{color:var(--gp);}
+
+/* ── SECTIONS ── */
+.sec-dark{background:#0a0a08;padding:6rem 2rem;}
+.sec-mid{background:#0e0e0b;padding:6rem 2rem;}
+.inner{max-width:1100px;margin:0 auto;}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;color:var(--gl);text-transform:uppercase;margin-bottom:.75rem;}
+.sec-title{font-size:clamp(28px,4vw,52px);font-weight:900;line-height:1.2;color:#fff;margin-bottom:1.25rem;}
+.sec-desc{font-size:clamp(14px,1.4vw,17px);color:rgba(255,255,255,.55);line-height:1.9;max-width:700px;}
+
+/* ── STAT GRID ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.25rem;margin:3rem 0;}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:1.75rem;transition:border-color .3s,background .3s,transform .3s;}
+.stat-card:hover{border-color:rgba(122,182,72,.4);background:rgba(45,80,22,.18);transform:translateY(-5px);}
+.stat-num{font-size:clamp(36px,5vw,58px);font-weight:900;color:var(--gp);line-height:1;margin-bottom:.4rem;}
+.stat-unit{font-size:17px;}
+.stat-lbl{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;}
+.stat-src{font-size:11px;color:rgba(255,255,255,.25);margin-top:.75rem;}
+.hl-bar{background:linear-gradient(135deg,rgba(45,80,22,.55),rgba(74,122,40,.3));border:1px solid rgba(122,182,72,.3);border-radius:16px;padding:2rem 2.5rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.hl-icon{font-size:42px;flex-shrink:0;}
+.hl-text{font-size:clamp(15px,1.7vw,18px);line-height:1.75;color:rgba(255,255,255,.85);}
+.hl-text strong{color:var(--gp);}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start;margin-top:3rem;}
+@media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+.kn-list{display:flex;flex-direction:column;gap:1.75rem;}
+.kn-item{border-left:3px solid var(--gl);padding-left:1.5rem;}
+.kn-item .num{font-size:clamp(28px,3.5vw,48px);font-weight:900;color:var(--gp);line-height:1;margin-bottom:.3rem;}
+.kn-item .lbl{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;}
+.story-list{display:flex;flex-direction:column;gap:1rem;}
+.story-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.25rem 1.5rem;font-size:14px;color:rgba(255,255,255,.7);line-height:1.78;}
+.story-card strong{color:#fff;}
+
+/* ── IMG+TEXT PAIR ── */
+.pair{display:grid;grid-template-columns:1fr 1fr;border-radius:20px;overflow:hidden;margin:3rem 0;}
+@media(max-width:800px){.pair{grid-template-columns:1fr;}}
+.pair img{width:100%;height:100%;object-fit:cover;min-height:280px;filter:brightness(.65) saturate(.75);}
+.pair-side{background:rgba(255,255,255,.04);padding:2.5rem;display:flex;flex-direction:column;justify-content:center;}
+.pair-side h3{font-size:clamp(20px,2.5vw,30px);font-weight:900;color:#fff;margin:0.5rem 0 1rem;line-height:1.25;}
+.pair-side p{font-size:14px;color:rgba(255,255,255,.65);line-height:1.82;}
+.pair-side p strong{color:var(--gp);}
+
+/* ── ATAKAMA ── */
+.atakama{background:linear-gradient(135deg,rgba(80,20,20,.65),rgba(40,10,10,.4));border:1px solid rgba(200,80,80,.25);border-radius:20px;padding:2.5rem;margin-top:3rem;display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start;}
+.at-num{font-size:clamp(32px,5vw,56px);font-weight:900;color:#ffaaaa;line-height:1;flex-shrink:0;}
+.at-desc{font-size:15px;color:rgba(255,255,255,.72);line-height:1.82;}
+.at-desc strong{color:#ffaaaa;}
+
+/* ── TRANSITION ── */
+.transition{background:linear-gradient(to bottom,#0a0a08,var(--gd));padding:7rem 2rem;text-align:center;}
+.tr-inner{max-width:720px;margin:0 auto;}
+.tr-title{font-size:clamp(26px,4vw,50px);font-weight:900;line-height:1.3;color:#fff;margin-bottom:1.5rem;}
+.tr-title .accent{color:var(--gp);}
+.tr-desc{font-size:clamp(14px,1.4vw,18px);color:rgba(255,255,255,.68);line-height:1.9;margin-bottom:2.5rem;}
+.bounce{font-size:32px;color:var(--gp);animation:bounce 2s ease-in-out infinite;display:inline-block;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(10px);}}
+
+/* ── GUIDEBOOK ── */
+.guidebook{background:var(--cream);padding:7rem 2rem;color:var(--text);}
+.guide-inner{max-width:1100px;margin:0 auto;}
+.guide-hd{text-align:center;margin-bottom:4rem;}
+.guide-brand{font-size:12px;font-weight:700;letter-spacing:.15em;color:var(--gm);margin-bottom:.75rem;}
+.guide-title{font-size:clamp(36px,6vw,82px);font-weight:900;color:var(--gd);line-height:.95;margin-bottom:.5rem;}
+.guide-sub{font-size:17px;font-weight:700;color:var(--gm);}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.25rem;}
+.step-card{background:var(--gd);border-radius:20px;padding:2rem 1.75rem;cursor:pointer;position:relative;overflow:hidden;transition:transform .3s cubic-bezier(.34,1.4,.64,1),box-shadow .3s;}
+.step-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.1),transparent 60%);pointer-events:none;}
+.step-card:hover{transform:translateY(-10px) scale(1.02);box-shadow:0 24px 56px rgba(45,80,22,.45);}
+.step-card:active{transform:scale(.97);}
+.step-badge{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:1.25rem;}
+.step-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:.5rem;}
+.step-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;}
+.step-cta{margin-top:1.5rem;font-size:13px;font-weight:700;color:var(--gp);}
+
+/* ── FOOTER ── */
+footer{background:var(--gd);padding:3rem 2rem;text-align:center;color:rgba(255,255,255,.5);font-size:13px;line-height:1.9;}
+footer strong{color:rgba(255,255,255,.85);}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:300;align-items:center;justify-content:center;padding:2rem;}
+.mo.open{display:flex;animation:oin .2s ease;}
+@keyframes oin{from{opacity:0;}to{opacity:1;}}
+.mo-box{background:var(--cream);border-radius:24px;width:100%;max-width:700px;max-height:88vh;overflow-y:auto;color:var(--text);animation:min .3s cubic-bezier(.34,1.2,.64,1);}
+@keyframes min{from{opacity:0;transform:scale(.93) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.mo-top{background:var(--gd);border-radius:24px 24px 0 0;padding:2rem 2rem 1.5rem;position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;}
+.mo-badge{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--gp);margin-bottom:.4rem;}
+.mo-title{font-size:26px;font-weight:900;color:#fff;line-height:1.2;}
+.mo-close{background:rgba(255,255,255,.15);border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:1rem;flex-shrink:0;}
+.mo-body{padding:1.75rem 2rem 2.5rem;}
+.ms{margin-bottom:1.75rem;}
+.ms-title{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--gm);text-transform:uppercase;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:2px solid var(--gp);}
+.mi{font-size:14px;color:#333;line-height:1.75;padding:10px 14px;background:#fff;border-radius:10px;margin-bottom:8px;}
+.mi.bad{background:#fff5f5;border-left:3px solid #d07070;}
+.mi.bad::before{content:"❌ ";}
+.mi.good{background:#f0f7ea;border-left:3px solid var(--gl);}
+.mi.good::before{content:"✅ ";}
+.mh{background:var(--gd);color:#fff;border-radius:12px;padding:14px 18px;font-size:14px;font-weight:700;line-height:1.65;margin-bottom:10px;}
+.mtable{width:100%;border-collapse:collapse;font-size:13px;overflow:hidden;margin-bottom:10px;border-radius:10px;}
+.mtable th{background:var(--gd);color:#fff;padding:9px 14px;text-align:left;font-weight:700;}
+.mtable td{background:#fff;padding:9px 14px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.5;}
+.mtable tr:last-child td{border-bottom:none;}
+.daso{background:#fff9ec;border:2px solid #f0c040;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.75;margin-bottom:10px;}
+.daso strong{color:var(--gd);}
+.mtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.mtag{font-size:12px;font-weight:700;background:var(--gp);color:var(--gd);border-radius:20px;padding:4px 12px;}
+.mnote{background:#f5f0e8;font-size:13px;color:#666;padding:10px 14px;border-radius:10px;margin-bottom:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-img" id="heroImg"></div>
+  <div class="hero-grad"></div>
+  <div class="hero-content">
+    <div class="hero-tag">서울여자대학교 바롬종합설계프로젝트 06분반 5조</div>
+    <h1 class="hero-title">우리가 버린 옷은<br><span class="accent">어디로 갈까?</span></h1>
+    <p class="hero-sub">패스트패션이 만들어낸 의류 폐기물의 실태와,<br>우리가 지금 당장 실천할 수 있는 것들</p>
+  </div>
+  <div class="scroll-hint"><span>SCROLL</span><div class="scroll-line"></div></div>
+</section>
+
+<!-- IMAGE STRIP 1 -->
+<div class="img-strip">
+  <img id="strip1" src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=1600&q=80" alt="의류 생산 공장">
+  <div class="img-strip-overlay" style="background:linear-gradient(to right,rgba(10,10,8,.75),rgba(10,10,8,.05));">
+    <div class="img-strip-text sr">매년 전 세계에서<br><span class="accent">1,000억 벌</span> 이상의<br>옷이 만들어집니다</div>
+  </div>
+</div>
+
+<!-- STATS INTRO -->
+<section class="sec-mid">
+  <div class="inner" style="text-align:center;">
+    <div class="eyebrow sr">전 세계의 현실</div>
+    <h2 class="sec-title sr d1">매년 쏟아지는 옷,<br>그 끝은 어디일까요</h2>
+    <p class="sec-desc sr d2" style="margin:0 auto;">2000년 이후 본격화된 패스트패션은 의류 생산량을 급격히 증가시켰습니다. 패션 산업은 현재 전 세계 제2위 환경오염 산업으로 꼽힙니다.</p>
+  </div>
+</section>
+
+<!-- WORLD STATS -->
+<section class="sec-dark">
+  <div class="inner">
+    <div class="eyebrow sr">글로벌 데이터</div>
+    <h2 class="sec-title sr d1">숫자로 보는<br>패스트패션의 민낯</h2>
+    <div class="stat-grid">
+      <div class="stat-card sr d1"><div class="stat-num">9,200<span class="stat-unit">만 톤</span></div><div class="stat-lbl">전 세계 연간 섬유 폐기물 발생량</div><div class="stat-src">출처: 업계 통계</div></div>
+      <div class="stat-card sr d2"><div class="stat-num">85<span class="stat-unit">%</span></div><div class="stat-lbl">재활용되지 못한 채 매립·소각되는 의류 비율</div><div class="stat-src">출처: 업계 통계</div></div>
+      <div class="stat-card sr d3"><div class="stat-num">10<span class="stat-unit">%</span></div><div class="stat-lbl">패션 산업의 전 세계 탄소 배출량 비중</div><div class="stat-src">출처: UN / IPCC</div></div>
+      <div class="stat-card sr d4"><div class="stat-num">20<span class="stat-unit">%</span></div><div class="stat-lbl">의류 염색·가공 과정의 수질 오염 비중</div><div class="stat-src">출처: UN Environment</div></div>
+      <div class="stat-card sr d5"><div class="stat-num">1<span class="stat-unit">% 미만</span></div><div class="stat-lbl">헌 옷이 새 옷으로 재활용되는 비율</div><div class="stat-src">출처: 업계 통계</div></div>
+      <div class="stat-card sr d6"><div class="stat-num">2,700<span class="stat-unit">L</span></div><div class="stat-lbl">티셔츠 한 장을 만드는 데 필요한 물의 양</div><div class="stat-src">출처: WWF</div></div>
+    </div>
+    <div class="hl-bar sr">
+      <div class="hl-icon">👕</div>
+      <div class="hl-text">청바지 한 벌 생산에서 <strong>이산화탄소 33kg</strong> 배출.<br>쉬인·테무 등 울트라 패스트패션의 급성장은 이 문제를 더욱 심화시키고 있습니다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE STRIP 2 — 옷 쓰레기 -->
+<div class="img-strip">
+  <img id="strip2" src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1600&q=80" alt="의류 폐기물">
+  <div class="img-strip-overlay" style="background:linear-gradient(to left,rgba(10,10,8,.75),rgba(10,10,8,.05));">
+    <div class="img-strip-text right sr">버려진 옷의 <span class="accent">85%</span>는<br>매립지나 소각장으로<br>향합니다</div>
+  </div>
+</div>
+
+<!-- KOREA STATS -->
+<section class="sec-mid">
+  <div class="inner">
+    <div class="eyebrow sr">국내 현황</div>
+    <h2 class="sec-title sr d1">한국의 이야기</h2>
+    <div class="two-col">
+      <div class="kn-list">
+        <div class="kn-item sl d1"><div class="num">11<span style="font-size:.5em">만 톤</span></div><div class="lbl">2022년 국내 연간 의류 폐기물<br>(2018년 6.6만 톤 → 4년 만에 66% 급증)</div></div>
+        <div class="kn-item sl d2"><div class="num">세계 5위</div><div class="lbl">한국의 헌 옷 수출량 순위<br>(미국·중국·영국·독일 다음)</div></div>
+        <div class="kn-item sl d3"><div class="num">20%<span style="font-size:.5em"> 미만</span></div><div class="lbl">국내 의류 재활용률<br>나머지는 소각·매립·해외 수출</div></div>
+        <div class="kn-item sl d4"><div class="num">12%</div><div class="lbl">수거된 헌 옷 중 실제 재활용 비율</div></div>
+      </div>
+      <div class="story-list">
+        <div class="story-card srr d1"><strong>수거함의 진실</strong><br>의류 수거함의 대부분은 국가가 아닌 사설 업체가 수익 목적으로 운영합니다. 체계적인 관리가 이루어지지 않아 폐의류 발생량에 대한 정확한 통계조차 집계되지 않는 실정입니다.</div>
+        <div class="story-card srr d2"><strong>법의 사각지대</strong><br>국내법상 의류는 폐기물로 인정되지 않아 순환경제 관련 지원에서 제외됩니다. 이 법적 공백이 의류 재활용 인프라 구축을 가로막고 있습니다.</div>
+        <div class="story-card srr d3"><strong>폐기물의 이동</strong><br>한국에서 수출된 헌 옷 상당수는 방글라데시·필리핀·가나 등으로 보내지지만, 현지에서도 소비되지 못한 채 강가와 해변에 버려져 환경을 오염시킵니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE + TEXT — 수거함 -->
+<section class="sec-dark" style="padding:2rem 2rem;">
+  <div class="inner">
+    <div class="pair sr">
+      <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80" alt="의류 재활용 수거">
+      <div class="pair-side">
+        <div class="eyebrow">의류수거함의 현실</div>
+        <h3>버린다고<br>해결되지 않습니다</h3>
+        <p>길가의 의류수거함은 친환경처럼 보이지만, 수거된 의류의 <strong>12%만이 실제로 재활용</strong>됩니다. 나머지는 상품 가치를 잃고 개발도상국으로 수출되거나 소각됩니다.<br><br>올바른 배출 방법을 아는 것만으로도 환경에 기여할 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GLOBAL SOUTH -->
+<section class="sec-dark">
+  <div class="inner">
+    <div class="eyebrow sr">글로벌 불평등</div>
+    <h2 class="sec-title sr d1">우리가 버린 옷의<br>최종 목적지</h2>
+    <p class="sec-desc sr d2">선진국에서 기부되거나 버려진 중고 의류의 상당수는 가나, 케냐, 칠레 등으로 수출됩니다. 하지만 이 중 30~40%는 상품 가치가 없어 현지에서도 처리되지 못합니다.</p>
+    <div class="atakama sr">
+      <div class="at-num">39,000<br><span style="font-size:.4em">톤</span></div>
+      <div class="at-desc">칠레 <strong>아타카마 사막</strong>에 쌓인 의류 폐기물의 양입니다.<br>세계에서 가장 건조한 사막이 선진국 패스트패션의 쓰레기장이 되었습니다.<br>이는 단순한 환경 문제를 넘어 <strong>국제적 환경 불평등</strong> 문제입니다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE STRIP 3 — 사막 -->
+<div class="img-strip" style="height:50vh;">
+  <img id="strip3" src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=1600&q=80" alt="버려진 옷더미">
+  <div class="img-strip-overlay" style="background:linear-gradient(to left,rgba(10,10,8,.75),rgba(10,10,8,.05));">
+    <div class="img-strip-text right sr">아타카마 사막엔 지금도<br>매주 <span class="accent">수천 톤</span>의<br>옷이 버려집니다</div>
+  </div>
+</div>
+
+<!-- TRANSITION -->
+<section class="transition">
+  <div class="tr-inner">
+    <h2 class="tr-title sr">그렇다면,<br>우리는 <span class="accent">무엇을 할 수 있을까요?</span></h2>
+    <p class="tr-desc sr d2">죄책감을 갖는 것이 아니라, 소비자 스스로 소비 습관을 점검하고<br>구매 전 '정말 필요한 소비인가'를 한 번 더 고민하는 태도를 기르는 것.<br>작은 실천이 모여 지속가능한 소비문화를 만듭니다.</p>
+    <div class="bounce sr d3">↓</div>
+  </div>
+</section>
+
+<!-- GUIDEBOOK -->
+<section class="guidebook" id="guidebook">
+  <div class="guide-inner">
+    <div class="guide-hd">
+      <div class="guide-brand sr">입고 또 입기 가이드북</div>
+      <h2 class="guide-title sr d1">입고<br>또 입기</h2>
+      <div class="guide-sub sr d2">각 단계를 클릭해 자세한 내용을 확인하세요</div>
+    </div>
+    <div class="steps">
+      <div class="step-card sr d1" onclick="openM('buy')"><div class="step-badge">①</div><div class="step-title">구매 전</div><div class="step-desc">치수 파악 → 리뷰 확인 → 코디 가능 여부 점검</div><div class="step-cta">자세히 보기 →</div></div>
+      <div class="step-card sr d2" onclick="openM('use')"><div class="step-badge">②</div><div class="step-title">활용</div><div class="step-desc">레이어드, 재해석, 리폼으로 새 조합 만들기</div><div class="step-cta">자세히 보기 →</div></div>
+      <div class="step-card sr d3" onclick="openM('care')"><div class="step-badge">③</div><div class="step-title">관리</div><div class="step-desc">소재에 맞는 세탁법과 보관법 준수</div><div class="step-cta">자세히 보기 →</div></div>
+      <div class="step-card sr d4" onclick="openM('dispose')"><div class="step-badge">④</div><div class="step-title">처분</div><div class="step-desc">재사용 우선 → 의류수거함 올바르게 이용</div><div class="step-cta">자세히 보기 →</div></div>
+    </div>
+  </div>
+</section>
+
+<footer><strong>입고 또 입기</strong><br>서울여자대학교 바롬종합설계프로젝트 06분반 5조<br>ig @wear.again_swu</footer>
+
+<!-- MODAL -->
+<div class="mo" id="mo" onclick="handleMO(event)">
+  <div class="mo-box">
+    <div class="mo-top">
+      <div><div class="mo-badge" id="mbadge"></div><div class="mo-title" id="mtitle"></div></div>
+      <button class="mo-close" onclick="closeM()">✕</button>
+    </div>
+    <div class="mo-body" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// ── 양방향 스크롤 애니메이션 ──
+const allEls = document.querySelectorAll('.sr,.sl,.srr');
+let prevY = window.scrollY;
+
+const obs = new IntersectionObserver((entries) => {
+  const nowY = window.scrollY;
+  const goingDown = nowY >= prevY;
+  prevY = nowY;
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      e.target.classList.remove('out');
+    } else {
+      e.target.classList.remove('in');
+      if (goingDown) e.target.classList.add('out');
+      else e.target.classList.remove('out');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -4% 0px' });
+
+allEls.forEach(el => obs.observe(el));
+
+// ── 패럴랙스 ──
+const strips = [
+  { wrap: document.querySelectorAll('.img-strip')[0], img: document.getElementById('strip1') },
+  { wrap: document.querySelectorAll('.img-strip')[1], img: document.getElementById('strip2') },
+  { wrap: document.querySelectorAll('.img-strip')[2], img: document.getElementById('strip3') },
+];
+
+window.addEventListener('scroll', () => {
+  prevY = window.scrollY;
+  strips.forEach(({wrap, img}) => {
+    if (!wrap || !img) return;
+    const rect = wrap.getBoundingClientRect();
+    const pct = rect.top / window.innerHeight;
+    img.style.transform = `scale(1.08) translateY(${pct * 20}px)`;
+  });
+}, { passive: true });
+
+// ── Hero ken-burns ──
+window.addEventListener('load', () => document.getElementById('heroImg').classList.add('loaded'));
+
+// ── MODAL ──
+const mData = {
+  buy:{
+    badge:'① 구매 전', title:'실패 없는 의류 구매법',
+    body:`<div class="ms"><div class="ms-title">📏 내 기준 치수 먼저 파악하기</div>
+    <div class="mh">신체 치수보다 자주 입는 옷의 실측을 미리 파악하는 게 훨씬 실용적!</div>
+    <div class="mi good">기준 옷을 평평하게 놓고 → 어깨너비, 가슴너비, 총장 측정 → 메모해두기</div>
+    <div class="mi">기준 옷이 없다면? 유니클로·자주 매장에서 여러 사이즈 피팅 후 실측 메모 — 살 생각 없어도 OK!</div>
+    <div class="mi good">딱 맞는 핏 → 기준 옷과 비슷하게 / 여유로운 핏 → 기준 옷보다 2~4cm 크게</div></div>
+    <div class="ms"><div class="ms-title">📐 아이템별 핵심 치수</div>
+    <table class="mtable"><tr><th>아이템</th><th>가장 중요한 치수</th></tr>
+    <tr><td>👕 상의</td><td>어깨너비, 가슴둘레</td></tr><tr><td>👖 하의</td><td>허리둘레, 엉덩이둘레, 밑위</td></tr>
+    <tr><td>👗 원피스</td><td>가슴둘레, 총장</td></tr><tr><td>🧥 아우터</td><td>어깨너비 (안에 입을 옷 두께 고려 +2~3cm)</td></tr></table>
+    <div class="mh">⚠️ 어깨선이 1순위! 허리·기장은 수선 가능하지만 어깨는 수선 거의 불가</div></div>
+    <div class="ms"><div class="ms-title">🏷️ 사이즈 표기 혼용 주의</div>
+    <div class="mi bad">ZARA·COS·아디다스 등 글로벌 브랜드 택엔 US/EU/JP/CN 사이즈 동시 표기 — '36'이 FR36(S)인지 IT36(XXS)인지에 따라 크기 완전히 달라요</div>
+    <div class="mi bad">국내 44/55/66·S/M/L은 법적 표준 아님 — 브랜드마다 기준이 달라요</div>
+    <div class="mi good">cm 단위 실측만 믿기! 하의 인치 → 허리 실측(cm) ÷ 2.54</div></div>
+    <div class="ms"><div class="ms-title">🔍 온라인 리뷰 확인 포인트</div>
+    <div class="mi good">색감에 따른 비침 정도 확인</div><div class="mi good">세탁 후 변화 후기 참고</div><div class="mi good">반품·교환 공지 사전 확인</div></div>
+    <div class="ms"><div class="ms-title">🎨 스타일 파악법</div>
+    <div class="mi good">온라인 — 검증된 내 스타일로 안정적 구매</div>
+    <div class="mi good">오프라인 — 평소 시도 못 했던 스타일 직접 입어보는 장으로 활용</div>
+    <div class="mi bad">못 입는 스타일이라면 구매 보류 / 기존 옷과 코디 불가하면 지양</div></div>
+    <div class="ms"><div class="ms-title">💡 구매 실패 줄이는 꿀팁</div>
+    <div class="mi good">쇼핑 전 내 옷장 사진 찍어두기</div>
+    <div class="mi good">마음에 들면 사진만 찍고 하루 뒤 다시 생각해보기</div>
+    <div class="mi bad">세일·유행 상품일수록 왜 재고가 남았는지 생각해보기</div></div>`
+  },
+  use:{
+    badge:'② 활용', title:'입고 또 입기 실천법',
+    body:`<div class="ms"><div class="ms-title">🤔 왜 안 입게 됐는지 먼저 파악</div>
+    <div class="mtags"><span class="mtag">코디 어려움</span><span class="mtag">유행 지남</span><span class="mtag">핏 애매</span><span class="mtag">질림</span><span class="mtag">불편함</span></div>
+    <div class="mi">이유를 알면 해결책이 보여요!</div></div>
+    <div class="ms"><div class="ms-title">👗 레이어드 활용</div>
+    <div class="mh">단독으로 애매한 옷은 레이어드로 새 생명을!</div>
+    <div class="mi good">원피스 + 팬츠</div><div class="mi good">셔츠 위에 슬리브리스</div>
+    <div class="mi good">후드 안에 셔츠</div><div class="mi good">긴 티 위에 반팔</div></div>
+    <div class="ms"><div class="ms-title">🎨 스타일 재해석</div>
+    <div class="mi good">빈티지 티셔츠 → 스트릿 스타일로</div>
+    <div class="mi good">블레이저 → 캐주얼하게 환기</div>
+    <div class="mi">요즘 패션은 믹스 스타일이 주류!</div></div>
+    <div class="ms"><div class="ms-title">✂️ 리폼 & 다이소 리폼템</div>
+    <div class="mi good">티셔츠 → 에코백 / 데님 → 파우치</div>
+    <div class="daso"><strong>🛒 다이소 리폼템</strong><br>다리미 접착 수선테이프 / 보풀 제거기 / 패브릭 패치·와펜 / 의류용 접착제</div></div>
+    <div class="ms"><div class="ms-title">📱 Whering 앱 활용</div>
+    <div class="mh">가진 옷을 찍어 업로드하면 AI가 코디를 추천!</div>
+    <div class="mi good">가진 옷끼리 새 조합 / 컬러 조화 찾기</div></div>`
+  },
+  care:{
+    badge:'③ 관리', title:'소재별 세탁·보관법',
+    body:`<div class="ms"><div class="ms-title">🐑 울 (Wool)</div>
+    <div class="mnote">열과 마찰 → 영구 수축. 복구 불가능!</div>
+    <div class="mi bad">뜨거운 물 세탁</div><div class="mi bad">세탁기 일반 코스</div><div class="mi bad">건조기</div>
+    <div class="mi good">중성세제로 찬물 손세탁</div><div class="mi good">그늘에 평평하게 건조</div><div class="mi good">접어서 보관</div></div>
+    <div class="ms"><div class="ms-title">🌿 레이온 (Rayon)</div>
+    <div class="mnote">물에 젖으면 강도 50% 이하로 급감!</div>
+    <div class="mi bad">세탁기 물세탁</div><div class="mi bad">강하게 쥐어짜기</div>
+    <div class="mi good">가급적 드라이클리닝</div><div class="mi good">불가피하면 찬물에 살살 손세탁</div></div>
+    <div class="ms"><div class="ms-title">🧶 니트 (Knit)</div>
+    <div class="mnote">중력·마찰에 취약 — 늘어짐·보풀 주의!</div>
+    <div class="mi bad">옷걸이 보관</div><div class="mi bad">비벼 빨기</div>
+    <div class="mi good">세탁망 사용 약한 세탁</div><div class="mi good">평건조 필수</div><div class="mi good">접거나 말아서 보관</div></div>
+    <div class="ms"><div class="ms-title">🪶 다운 (Down)</div>
+    <div class="mnote">압력 지속 시 복원력 상실!</div>
+    <div class="mi bad">압축팩 장기 보관</div><div class="mi bad">덜 마른 채 방치</div>
+    <div class="mi good">완전 건조 (건조볼 활용)</div><div class="mi good">압축 없이 여유 있게 보관</div></div>`
+  },
+  dispose:{
+    badge:'④ 처분', title:'옷과 작별인사',
+    body:`<div class="ms"><div class="ms-title">✅ 처분 전 체크리스트</div>
+    <div class="mi good">다시 입을 수 있는가?</div><div class="mi good">다른 사람이 입을 수 있는 상태인가?</div>
+    <div class="mi good">수선하거나 활용할 수 있는가?</div><div class="mi good">재활용이 가능한가?</div></div>
+    <div class="ms"><div class="ms-title">🔄 아직 입을 수 있다면 — 재사용 우선</div>
+    <div class="mh">새 옷 구매 감소 + 버려지는 옷 감소 + 비용 부담 감소!</div>
+    <div class="mi good">중고거래</div><div class="mi good">기부</div><div class="mi good">나눔</div><div class="mi good">의류 교환</div></div>
+    <div class="ms"><div class="ms-title">🗑️ 의류수거함 올바르게 이용하기</div>
+    <div class="mi good">깨끗하고 상태 좋은 의류</div>
+    <div class="mi bad">침구류 (솜이불, 베개, 방석 등)</div>
+    <div class="mi bad">신발류 (인라인 스케이트, 젤리슈즈, 장화)</div>
+    <div class="mi bad">한 짝만 있는 신발</div>
+    <div class="mi bad">심하게 오염되거나 찢어진 의류</div></div>`
+  }
+};
+
+function openM(key){
+  const m=mData[key];
+  document.getElementById('mbadge').textContent=m.badge;
+  document.getElementById('mtitle').textContent=m.title;
+  document.getElementById('mbody').innerHTML=m.body;
+  document.getElementById('mo').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeM(){document.getElementById('mo').classList.remove('open');document.body.style.overflow='';}
+function handleMO(e){if(e.target===document.getElementById('mo'))closeM();}
+</script>
+</body>
+</html>
